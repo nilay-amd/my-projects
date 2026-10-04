@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>K-Map Solver (2-4 Variables)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header>
+    <div class="brand">
+      <div class="logo">K</div>
+      <div class="title">K-Map Solver <span class="badge-sub">2-4 Variables</span></div>
+    </div>
+    <div class="control-group">
+      <label for="varSelect">Variables:</label>
+      <select id="varSelect" onchange="changeVariables(this.value)">
+        <option value="2">2-Variable (A, B)</option>
+        <option value="3">3-Variable (A, B, C)</option>
+        <option value="4" selected>4-Variable (A, B, C, D)</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- MAIN DASHBOARD -->
+  <main>
+    <!-- LEFT PANEL -->
+    <section class="panel-left">
+      <!-- KMAP GRID -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Karnaugh Map Grid</div>
+          <div style="font-size: 11px; color: #64748b;">Click cell to cycle (Blank &rarr; 1 &rarr; 0 &rarr; X)</div>
+        </div>
+        <div id="gridWrapper"></div>
+      </div>
+
+      <!-- MINIMIZATION & DETAILS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Minimization & Details</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Minimized SOP (Sum of Products):</div>
+            <div id="sopResult" class="result-box font-mono">Y = 0</div>
+          </div>
+          <div>
+            <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Minimized POS (Product of Sums):</div>
+            <div id="posResult" class="result-box font-mono">Y = 0</div>
+          </div>
+        </div>
+
+        <!-- GROUP BREAKDOWN LISTS (SOP & POS Maxterms) -->
+        <div class="groups-container">
+          <div class="group-column">
+            <div class="group-subheading">SOP Groups</div>
+            <div id="sopGroupList" style="display: flex; flex-direction: column; gap: 4px;"></div>
+          </div>
+          <div class="group-column">
+            <div class="group-subheading">POS Maxterm Groups</div>
+            <div id="posGroupList" style="display: flex; flex-direction: column; gap: 4px;"></div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
+          <div>
+            <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">MINTERMS (SOP):</div>
+            <div class="input-matrix-container">
+              <input type="text" id="sopInput" class="input-matrix font-mono" placeholder="e.g. 1, 3, 7, 11" onkeydown="if(event.key==='Enter') applyMatrix('SOP')" />
+              <button class="btn-apply" onclick="applyMatrix('SOP')">Apply</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">MAXTERMS (POS):</div>
+            <div class="input-matrix-container">
+              <input type="text" id="posInput" class="input-matrix font-mono" placeholder="e.g. 0, 2, 5, 10" onkeydown="if(event.key==='Enter') applyMatrix('POS')" />
+              <button class="btn-apply" onclick="applyMatrix('POS')">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL -->
+    <section class="panel-right">
+      <div class="card" style="flex: 1;">
+        <div class="card-header">
+          <div class="card-title">Truth Table</div>
+          <button class="btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="renderAll()">Sync Grid</button>
+        </div>
+        <div class="table-scroll">
+          <table class="truth-table font-mono">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Quick Controls</div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button class="btn-secondary" onclick="fillAll('')">Clear All (Blank)</button>
+          <button class="btn-secondary" onclick="fillAll('1')">Set All (1s)</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

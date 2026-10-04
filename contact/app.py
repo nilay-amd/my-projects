@@ -1,3 +1,5 @@
+import webbrowser
+from threading import Timer
 from flask import Flask, render_template, request, redirect, url_for
 import contacts
 
@@ -28,6 +30,8 @@ def delete():
     name = request.form.get('name', '').strip()
     contacts.delete_contact_web(name)
     return redirect(url_for('home'))
-
+def open_browser():
+    webbrowser.open_new('http://127.0.0.1:5001')
 if __name__ == '__main__':
-    app.run(debug=True)
+    Timer(1.0, open_browser).start()
+    app.run(port=5001, debug=False)

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Book</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #f1f5f9; color: #334155; padding: 40px 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h1 { color: #0f172a; font-size: 1.8rem; }
+    .header p { color: #64748b; font-size: 0.9rem; margin-top: 4px; }
+    
+    .card { background: #ffffff; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
+    .card h2 { font-size: 1.2rem; margin-bottom: 16px; color: #1e293b; }
+    
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #475569; }
+    input[type="text"], input[type="email"] { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; outline: none; }
+    input[type="text"]:focus, input[type="email"]:focus { border-color: #2563eb; }
+    
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 0.9rem; display: inline-block; }
+    .btn-primary { width: 100%; background-color: #2563eb; color: #ffffff; }
+    .btn-primary:hover { background-color: #1d4ed8; }
+    .btn-secondary { background-color: #475569; color: #ffffff; }
+    .btn-danger { background-color: #ef4444; color: #ffffff; padding: 6px 12px; font-size: 0.8rem; }
+    .btn-danger:hover { background-color: #dc2626; }
+    
+    .search-section { margin-bottom: 24px; }
+    .search-form { display: flex; gap: 8px; align-items: center; }
+    .btn-clear { color: #ef4444; font-size: 0.85rem; text-decoration: underline; margin-left: 8px; }
+
+    /* Collapsible Contacts Dropdown */
+    details { background: #ffffff; padding: 18px 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    summary { font-size: 1.1rem; font-weight: 600; color: #1e293b; cursor: pointer; user-select: none; }
+    summary:hover { color: #2563eb; }
+    
+    .contacts-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+    .contact-card { background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+    .contact-info h3 { font-size: 1rem; color: #0f172a; }
+    .contact-info p { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+    .empty-state { padding: 16px 0; text-align: center; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Contact Book</h1>
+      <p>Manage your contacts easily</p>
+    </div>
+
+    <!-- ADD CONTACT FORM -->
+    <div class="card">
+      <h2>Add New Contact</h2>
+      <form action="/add" method="POST">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" placeholder="Elon Musk" required />
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="text" id="phone" name="phone" placeholder="+12345678901" required />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="elon.musk@spacex.com" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Contact</button>
+      </form>
+    </div>
+
+    <!-- SEARCH FORM -->
+    <div class="search-section">
+      <form action="/search" method="GET" class="search-form">
+        <input type="text" name="query" placeholder="Search contacts by name..." value="{{ search_query if search_query else '' }}" />
+        <button type="submit" class="btn btn-secondary">Search</button>
+        {% if search_query %}
+          <a href="/" class="btn-clear">Clear</a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- HIDDEN / COLLAPSIBLE SAVED CONTACTS -->
+    <details>
+      <summary> View Saved Contacts ({{ contacts|length if contacts else 0 }})</summary>
+
+      {% if not contacts %}
+        <div class="empty-state">
+          <p>No contacts saved yet.</p>
+        </div>
+      {% else %}
+        <div class="contacts-list">
+          {% for name, info in contacts.items() %}
+            <div class="contact-card">
+              <div class="contact-info">
+                <h3>{{ name }}</h3>
+                <p>📞 {{ info.phone }}</p>
+                <p>✉️ {{ info.email }}</p>
+              </div>
+
+              <!-- DELETE FORM -->
+              <form action="/delete" method="POST">
+                <input type="hidden" name="name" value="{{ name }}" />
+                <button type="submit" class="btn btn-danger">Delete</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </details>
+  </div>
+</body>
+</html>

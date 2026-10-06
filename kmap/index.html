@@ -32,6 +32,14 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">Karnaugh Map Grid</div>
+          <div style="display: flex; gap: 8px; align-items: center; font-size: 11px;">
+    <span style="color: #64748b;">Labels:</span>
+    <select id="labelMode" onchange="renderAll()" style="padding: 2px 6px; font-size: 11px; font-weight: 600;">
+      <option value="binary">Binary (00, 01)</option>
+      <option value="sop">SOP Literals (A'B')</option>
+      <option value="pos">POS Literals (A+B)</option>
+    </select>
+  </div>
           <div style="font-size: 11px; color: #64748b;">Click cell to cycle (Blank &rarr; 1 &rarr; 0 &rarr; X)</div>
         </div>
         <div id="gridWrapper"></div>
@@ -90,7 +98,6 @@
       <div class="card" style="flex: 1;">
         <div class="card-header">
           <div class="card-title">Truth Table</div>
-          <button class="btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="renderAll()">Sync Grid</button>
         </div>
         <div class="table-scroll">
           <table class="truth-table font-mono">

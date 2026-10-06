@@ -35,7 +35,40 @@ function fillAll(val) {
   cellValues.fill(val);
   renderAll();
 }
-
+// For chaange in literals,
+function getHeaderLabels(numVars, mode) {
+  let v = ['A', 'B', 'C', 'D'].slice(0, numVars);
+  if (numVars === 4) {
+    if (mode === 'sop') {
+      return {
+        row: [`${v[0]}'${v[1]}'`, `${v[0]}'${v[1]}`, `${v[0]}${v[1]}`, `${v[0]}${v[1]}''`.replace("''","'")],
+        col: [`${v[2]}'${v[3]}'`, `${v[2]}'${v[3]}`, `${v[2]}${v[3]}`, `${v[2]}${v[3]}''`.replace("''","'")]
+      };
+    } else if (mode === 'pos') {
+      return {
+        row: [`${v[0]} + ${v[1]}`, `${v[0]} + ${v[1]}'`, `${v[0]}' + ${v[1]}'`, `${v[0]}' + ${v[1]}`],
+        col: [`${v[2]} + ${v[3]}`, `${v[2]} + ${v[3]}'`, `${v[2]}' + ${v[3]}'`, `${v[2]}' + ${v[3]}`]
+      };
+    }
+  } else if (numVars === 3) {
+    if (mode === 'sop') {
+      return {
+        row: [`${v[0]}'`, `${v[0]}`],
+        col: [`${v[1]}'${v[2]}'`, `${v[1]}'${v[2]}`, `${v[1]}${v[2]}`, `${v[1]}${v[2]}'`]
+      };
+    } else if (mode === 'pos') {
+      return {
+        row: [`${v[0]}`, `${v[0]}'`],
+        col: [`${v[1]} + ${v[2]}`, `${v[1]} + ${v[2]}'`, `${v[1]}' + ${v[2]}'`, `${v[1]}' + ${v[2]}`]
+      };
+    }
+  }
+  // Default binary fallback
+  return {
+    row: numVars === 2 ? ['0', '1'] : (numVars === 3 ? ['0', '1'] : ['00', '01', '11', '10']),
+    col: numVars === 2 ? ['0', '1'] : ['00', '01', '11', '10']
+  };
+}
 // Takes minterms from the SOP/POS input boxes and updates the K-map
 function applyMatrix(mode) {
   const inputId = mode === 'SOP' ? 'sopInput' : 'posInput';
@@ -70,9 +103,10 @@ function renderGrid(groups) {
   // Select row/column order and labels according to variable count
   let rowGray = numVars === 2 ? gray1 : (numVars === 3 ? gray1 : gray2);
   let colGray = numVars === 2 ? gray1 : gray2;
-  let rowLabels = numVars === 2 ? grayLabels1 : (numVars === 3 ? grayLabels1 : grayLabels2);
-  let colLabels = numVars === 2 ? grayLabels1 : grayLabels2;
-
+  let labelMode = document.getElementById('labelMode') ? document.getElementById('labelMode').value : 'binary';
+  let customLabels = getHeaderLabels(numVars, labelMode);
+  let rowLabels = customLabels.row;
+  let colLabels = customLabels.col;
   // Decide which variables belong to the rows and columns
   let rowVarLabel = numVars === 2 ? 'A' : (numVars === 3 ? 'A' : 'AB');
   let colVarLabel = numVars === 2 ? 'B' : (numVars === 3 ? 'BC' : 'CD');

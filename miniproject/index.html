@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Project Dyson – IoT Fire &amp; Gas Alert System</title>
+  
+  <!-- External Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Chart.js for Live Temperature Trend Graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="dashboard-wrapper">
+
+    <!-- Critical Hazard Emergency Strobe Banner -->
+    <div id="danger-banner" class="danger-banner">
+      <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      <span id="danger-banner-text">EMERGENCY: Immediate fire hazard detected! Siren active &amp; mobile phone alert dispatched.</span>
+    </div>
+
+    <!-- 1. Header -->
+    <header class="dashboard-header">
+      <div class="brand-group">
+        <div class="brand-logo">PD</div>
+        <div class="brand-titles">
+          <h1>Project Dyson</h1>
+          <p>IoT-Based Fire &amp; Gas Alert System &bull; Multi-Sensor Risk Fusion</p>
+        </div>
+      </div>
+      <div class="header-status-box">
+        <!-- Connection Status Pill (Offline by default, Online when Firebase/ESP32 connects) -->
+        <div id="hardware-status-pill" class="status-pill pill-offline">
+          <span class="dot"></span>
+          <span id="status-pill-text">OFFLINE</span>
+        </div>
+
+        <div class="last-sync-caption">
+          Last synced: <span id="sync-clock">Offline</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. Hero Status & Risk Score -->
+    <section id="hero-status-card" class="hero-status-box theme-offline">
+      <div class="status-left-panel">
+        <div class="eyebrow-label">PROPOSED SYSTEM STATUS</div>
+        <div id="current-status-heading" class="main-status-value">OFFLINE</div>
+        <div id="current-status-detail" class="main-status-desc">System is offline. No live telemetry received from ESP32 / Firebase. Turn Demo Mode ON below to test scenarios.</div>
+      </div>
+      <div class="status-right-panel">
+        <div class="score-eyebrow">PROPOSED RISK SCORE</div>
+        <div class="score-big-number">
+          <span id="score-counter">--</span><span class="pts-label">/ 170 pts</span>
+        </div>
+        <div class="score-caption">Provisional Multi-Sensor Model</div>
+      </div>
+    </section>
+
+    <!-- 3. Sensor Metrics Cards -->
+    <section class="sensors-grid">
+      <!-- Gas / Smoke -->
+      <div id="card-sensor-gas" class="sensor-card">
+        <div class="sensor-card-top">
+          <div>
+            <div class="sensor-name">Gas / Smoke</div>
+            <div class="sensor-model-badge">MQ-2 SENSOR (250–1250 PPM)</div>
+          </div>
+          <div class="sensor-icon-bubble">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/>
+            </svg>
+          </div>
+        </div>
+        <div id="gas-reading-main" class="sensor-value-reading">-- PPM</div>
+        <div class="sensor-substatus offline">
+          <span id="gas-reading-sub">Offline</span>
+        </div>
+      </div>
+
+      <!-- Temperature -->
+      <div id="card-sensor-temp" class="sensor-card">
+        <div class="sensor-card-top">
+          <div>
+            <div class="sensor-name">Temperature</div>
+            <div class="sensor-model-badge">DHT22 SENSOR (25–50&deg;C)</div>
+          </div>
+          <div class="sensor-icon-bubble">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+        </div>
+        <div id="temp-reading-main" class="sensor-value-reading">-- &deg;C</div>
+        <div class="sensor-substatus offline">
+          <span id="temp-reading-sub">Offline</span>
+        </div>
+      </div>
+
+      <!-- Flame -->
+      <div id="card-sensor-flame" class="sensor-card">
+        <div class="sensor-card-top">
+          <div>
+            <div class="sensor-name">Flame</div>
+            <div class="sensor-model-badge">FLAME SENSOR</div>
+          </div>
+          <div class="sensor-icon-bubble">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9.879z"/>
+            </svg>
+          </div>
+        </div>
+        <div id="flame-reading-main" class="sensor-value-reading">--</div>
+        <div class="sensor-substatus offline">
+          <span id="flame-reading-sub">Offline</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Visuals (Fire Risk Score Gauge & Temperature Trend Chart) -->
+    <section class="visuals-grid">
+      <!-- Fire Risk Score Gauge -->
+      <div class="visual-card">
+        <div class="visual-header">
+          <div class="visual-title">Proposed Fire Risk Score</div>
+          <div id="gauge-header-sub" class="visual-status-tag">Offline</div>
+        </div>
+        
+        <div class="gauge-wrapper">
+          <!-- Precise SVG Gauge with exact 0 to 170 Point Scale -->
+          <svg class="gauge-svg" viewBox="0 0 300 175">
+            <defs>
+              <linearGradient id="needle-glow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1e293b"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Arcs (Radius 105, Center (150, 140)) -->
+            <!-- Safe Arc: 0 to 49 (Green) -->
+            <path d="M 45 140 A 105 105 0 0 1 86 57" fill="none" stroke="#10b981" stroke-width="18" stroke-linecap="round" />
+            
+            <!-- Warning Arc: 50 to 89 (Amber) -->
+            <path d="M 92 53 A 105 105 0 0 1 159 35" fill="none" stroke="#f59e0b" stroke-width="18" />
+
+            <!-- Critical Arc: 90 to 170 (Red) -->
+            <path d="M 166 36 A 105 105 0 0 1 255 140" fill="none" stroke="#ef4444" stroke-width="18" stroke-linecap="round" />
+
+            <!-- Center Score Number & Label -->
+            <text id="svg-center-score" x="150" y="114" text-anchor="middle" font-size="34" font-weight="800" fill="#0f172a">--</text>
+            <text x="150" y="129" text-anchor="middle" font-size="9" font-weight="700" fill="#64748b" letter-spacing="0.5">PROPOSED SCORE</text>
+            <text x="150" y="139" text-anchor="middle" font-size="7.5" font-weight="600" fill="#94a3b8">MAX 170 PTS &bull; PROVISIONAL MODEL</text>
+
+            <!-- Gauge Scale Labels -->
+            <text x="45" y="162" text-anchor="middle" font-size="11" font-weight="600" fill="#64748b">0</text>
+            <text x="86" y="162" text-anchor="middle" font-size="11" font-weight="600" fill="#64748b">50</text>
+            <text x="159" y="162" text-anchor="middle" font-size="11" font-weight="600" fill="#64748b">90</text>
+            <text x="255" y="162" text-anchor="middle" font-size="11" font-weight="600" fill="#64748b">170</text>
+
+            <!-- Dynamic Indicator Needle -->
+            <g id="svg-gauge-needle" class="needle-element" style="transform: rotate(-90deg);">
+              <!-- Pointer -->
+              <path d="M 148 140 L 150 36 L 152 140 Z" fill="url(#needle-glow)" />
+              <!-- Center Hub -->
+              <circle cx="150" cy="140" r="7" fill="#0f172a" />
+              <circle cx="150" cy="140" r="3.5" fill="#ffffff" />
+            </g>
+          </svg>
+
+          <div class="gauge-legend-row">
+            <div class="legend-item"><span class="legend-bullet bullet-safe"></span> SAFE (&lt;50)</div>
+            <div class="legend-item"><span class="legend-bullet bullet-warn"></span> WARNING (50&ndash;89)</div>
+            <div class="legend-item"><span class="legend-bullet bullet-crit"></span> CRITICAL (&ge;90)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Temperature Trend Line Graph -->
+      <div class="visual-card">
+        <div class="visual-header">
+          <div class="visual-title">Temperature Trend</div>
+          <div id="trend-header-tag" class="visual-status-tag">DHT22 Stream Offline</div>
+        </div>
+        
+        <div class="trend-chart-box">
+          <canvas id="tempLineChart"></canvas>
+        </div>
+
+        <div class="trend-stats-footer">
+          <span>Baseline: 25&deg;C | Limit: 50&deg;C</span>
+          <span id="chart-stat-live">Live: -- &deg;C</span>
+          <span id="chart-stat-peak">Peak: -- &deg;C</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Alert Center & Device OLED Preview -->
+    <section class="system-ops-grid">
+      <!-- Alert Center -->
+      <div class="alert-center-container">
+        <div class="visual-header" style="margin-bottom: 0;">
+          <div class="visual-title">Alert Center</div>
+          <div id="alert-clock-time" class="visual-status-tag">Offline</div>
+        </div>
+
+        <!-- Notification Banner -->
+        <div id="alert-msg-box" class="alert-status-banner">
+          <svg id="alert-msg-svg" class="alert-banner-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div class="alert-banner-text">
+            <h4 id="alert-msg-title">System is offline</h4>
+            <p id="alert-msg-desc">Waiting for telemetry from ESP32 &amp; Firebase. Turn Demo Mode ON in the Demo Controls card below to test scenarios.</p>
+          </div>
+        </div>
+
+        <!-- Buzzer Control & Safety Notice -->
+        <div class="buzzer-bar">
+          <div class="buzzer-top-row">
+            <div class="buzzer-label-group">
+              <div class="buzzer-title-line">
+                BUZZER <span id="buzzer-dot" class="buzzer-dot"></span> <span id="buzzer-status-word">Armed</span>
+              </div>
+              <div id="buzzer-sub-desc" class="buzzer-subcaption">Local piezo alarm is ready on GPIO 23</div>
+            </div>
+            <div class="buzzer-button-group">
+              <button id="btn-sound-test" class="btn-action btn-test" title="Simulate audible piezo pulse">
+                Test Sound
+              </button>
+              <button id="btn-sound-toggle" class="btn-action btn-silence">
+                Silence Buzzer
+              </button>
+            </div>
+          </div>
+          <div class="buzzer-safety-note">
+            Silencing only controls the physical buzzer. Hazard detection, OLED, LEDs and dashboard alerts continue.
+          </div>
+        </div>
+      </div>
+
+      <!-- Device OLED Display Preview -->
+      <div class="oled-preview-card">
+        <div class="visual-header" style="margin-bottom: 10px;">
+          <div class="visual-title">Device OLED</div>
+          <div class="visual-status-tag">Physical SSD1306 preview</div>
+        </div>
+
+        <div class="oled-chassis">
+          <div class="oled-screen-glass">
+            <div class="oled-title-bar">
+              <span>PROJECT DYSON</span>
+              <span id="oled-disp-sync">[OFFLINE]</span>
+            </div>
+            <div class="oled-sep-line">--------------------------------------------------</div>
+            <div class="oled-data-row">
+              <span>TEMP : <span id="oled-disp-temp">-- &deg;C</span></span>
+            </div>
+            <div class="oled-data-row">
+              <span>GAS  : <span id="oled-disp-gas">-- PPM</span></span>
+            </div>
+            <div class="oled-data-row">
+              <span>FLAME: <span id="oled-disp-flame">--</span></span>
+            </div>
+            <div class="oled-data-row" style="margin-top: 2px; border-top: 1px dashed #0284c7; padding-top: 2px;">
+              <span>STATUS: <span id="oled-disp-status">OFFLINE</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Demo Controls Card -->
+    <section class="demo-controls-card viva-controls-card">
+      <div class="viva-title-row">
+        <div class="viva-title-group">
+          <h3>Demo Controls</h3>
+          <p>Turn Demo Mode ON to test and evaluate the proposed risk scoring model &amp; hazard overrides.</p>
+        </div>
+
+        <!-- Demo Mode Button / Toggle inside Demo Controls Card -->
+        <div class="demo-toggle-badge" id="demo-mode-badge" title="Toggle Demo Mode">
+          <span>Demo Mode:</span>
+          <label class="switch-small">
+            <input type="checkbox" id="demo-mode-toggle">
+            <span class="slider-small"></span>
+          </label>
+          <span id="demo-mode-label" style="font-weight: 700;">OFF</span>
+        </div>
+      </div>
+
+      <!-- Primary Demo Buttons demonstrating proposed decision logic -->
+      <div class="viva-buttons-strip">
+        <button class="btn-viva-pill btn-viva-safe" id="btn-preset-safe" onclick="applyDemoPreset('SAFE')" title="Score < 50, all normal">
+          SAFE (Baseline)
+        </button>
+        <button class="btn-viva-pill btn-viva-warn" id="btn-preset-gas-warn" onclick="applyDemoPreset('GAS_WARNING')" title="High gas alone overrides to WARNING even though temp is normal">
+          Gas Leak Warning
+        </button>
+        <button class="btn-viva-pill btn-viva-warn" id="btn-preset-combo-warn" onclick="applyDemoPreset('COMBO_WARNING')" title="Co-occurring elevated gas + heat escalates to WARNING">
+          Multi-Hazard Warning
+        </button>
+        <button class="btn-viva-pill btn-viva-crit" id="btn-preset-crit-flame" onclick="applyDemoPreset('CRITICAL_FLAME')" title="Flame detected: Immediate CRITICAL condition. Real DHT22 temp preserved.">
+          Critical (Flame)
+        </button>
+        <button class="btn-viva-pill btn-viva-crit" id="btn-preset-crit-combo" onclick="applyDemoPreset('CRITICAL_COMBO')" title="Severe gas + high heat combo escalates to CRITICAL without flame">
+          Critical (Dual Severe)
+        </button>
+      </div>
+
+      <!-- Granular Sliders for Examiner Testing -->
+      <div class="viva-sliders-box">
+        <div class="slider-item-col">
+          <div class="slider-head-text">
+            <span>MQ-2 Gas (250–1250 PPM):</span>
+            <span id="slider-gas-num">-- PPM (-- / 40 pts)</span>
+          </div>
+          <input type="range" id="slider-gas-ctrl" class="slider-range-bar" min="100" max="1400" value="280" step="10" disabled>
+          <span style="font-size: 0.68rem; color: #94a3b8;">&ge; 700 PPM triggers single-sensor Gas Hazard override</span>
+        </div>
+
+        <div class="slider-item-col">
+          <div class="slider-head-text">
+            <span>DHT22 Temp (25–50&deg;C):</span>
+            <span id="slider-temp-num">-- &deg;C (-- / 30 pts)</span>
+          </div>
+          <input type="range" id="slider-temp-ctrl" class="slider-range-bar" min="15.0" max="60.0" value="27.4" step="0.1" disabled>
+          <span style="font-size: 0.68rem; color: #94a3b8;">&ge; 42&deg;C triggers single-sensor Thermal Hazard override</span>
+        </div>
+
+        <div class="slider-item-col">
+          <div class="slider-head-text">
+            <span>Flame Sensor (0 or 100 pts):</span>
+            <span id="slider-flame-num" style="color: #64748b; font-weight: 700;">Offline</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 3px;">
+            <span style="font-size: 0.74rem; color: #64748b;">Trigger Flame (+100 pts):</span>
+            <label class="switch-wrapper">
+              <input type="checkbox" id="slider-flame-ctrl" disabled>
+              <span class="switch-track"></span>
+            </label>
+          </div>
+          <span style="font-size: 0.68rem; color: #94a3b8;">Flame detection is an immediate CRITICAL condition</span>
+        </div>
+      </div>
+    </section>
+<!-- 7. Hardware Diagnostics & Telemetry -->
+    <section class="demo-controls-card">
+      <div class="visual-header" style="margin-bottom: 12px;">
+        <div class="visual-title">Hardware Telemetry &amp; Diagnostics</div>
+        <div class="visual-status-tag">ESP32 Diagnostics</div>
+      </div>
+
+      <div class="hw-telemetry-row">
+        <div class="hw-telemetry-item">
+          <span class="hw-telemetry-lbl">Microcontroller</span>
+          <span id="telemetry-mcu" class="hw-telemetry-val">ESP32 DevKit v1</span>
+          <span id="telemetry-mcu-sub" class="hw-telemetry-sub">Offline (No Data)</span>
+        </div>
+        <div class="hw-telemetry-item">
+          <span class="hw-telemetry-lbl">Wi-Fi Signal</span>
+          <span id="telemetry-wifi-rssi" class="hw-telemetry-val">Offline</span>
+          <span id="telemetry-wifi-sub" class="hw-telemetry-sub">Awaiting connection</span>
+        </div>
+        <div class="hw-telemetry-item">
+          <span class="hw-telemetry-lbl">Status LEDs</span>
+          <span id="telemetry-leds" class="hw-telemetry-val">Offline</span>
+          <span class="hw-telemetry-sub">GPIO 18 / GPIO 19</span>
+        </div>
+        <div class="hw-telemetry-item">
+          <span class="hw-telemetry-lbl">Database Node</span>
+          <span class="hw-telemetry-val">Firebase RTDB</span>
+          <span class="hw-telemetry-sub">projectDyson</span>
+        </div>
+      </div>
+    </section>
+    <footer>
+      Project Dyson &bull; Proposed Multi-Sensor Risk-Scoring Model (Provisional) &bull; College IoT Project
+    </footer>
+
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
